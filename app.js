@@ -1,3 +1,4 @@
+// v10: Tooltip centering fix for desktop hover (especially podium 1)
 const EXCEL_FILE = 'OlympicTracker.xlsx';
 const SHEET_POINTS = 'Display Points';
 const SHEET_MEDALS = 'Medal Count';
@@ -27,8 +28,6 @@ function escapeHTML(str){
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
 }
-
-function rankDotClass(rank){ return rank===1?'gold':rank===2?'silver':rank===3?'bronze':''; }
 
 const COUNTRY_DISPLAY_MAP = { 'USA':'United States','US':'United States','U.S.':'United States','U.S.A.':'United States','Swiss':'Switzerland','Czech':'Czech Republic','UK':'Great Britain','AIN':'Individual Neutral Athletes' };
 function normalizeCountryName(name){
@@ -109,9 +108,7 @@ function chipsHTML(items, limit = Infinity, medalMap = null){
     const flag = flagForCountry(c);
     const flagSpan = flag ? `<span class="flag" aria-hidden="true">${flag}</span>` : '';
     const m = medalMap?.get?.(canonicalMedalCountryName(c));
-    const badge = (m && Number.isFinite(m.total))
-      ? `<span class="medalBadge">${m.total}</span>`
-      : `<span class="medalBadge">—</span>`;
+    const badge = (m && Number.isFinite(m.total)) ? `<span class="medalBadge">${m.total}</span>` : `<span class="medalBadge">—</span>`;
 
     const tooltip = m
       ? `<div class="tooltip" role="tooltip">
@@ -131,15 +128,17 @@ function positionTooltip(chip){
   const tip = chip.querySelector('.tooltip');
   if(!tip) return;
 
-  // Ensure tooltip has a size by forcing open briefly
+  const rect = chip.getBoundingClientRect();
+
+  // Force open briefly so it has measurable width/height
   const wasOpen = chip.classList.contains('open');
   chip.classList.add('open');
   const tipRect = tip.getBoundingClientRect();
   if(!wasOpen) chip.classList.remove('open');
 
-  const rect = chip.getBoundingClientRect();
   const margin = 10;
-  let x = rect.left;
+  // ✅ Center tooltip over the chip (fix for podium 1 on desktop)
+  let x = rect.left + (rect.width/2) - (tipRect.width/2);
   let y = rect.bottom + 8;
 
   const maxX = window.innerWidth - tipRect.width - margin;
@@ -209,7 +208,6 @@ function renderTable(sorted, medalMap){
   sorted.forEach((row, idx) => {
     const rank = idx + 1;
     const tr = document.createElement('tr');
-
     const tdRank = document.createElement('td');
     tdRank.innerHTML = `<span class="rankBadge">#${rank}</span>`;
 
