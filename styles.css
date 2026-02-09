@@ -97,7 +97,7 @@ h1{margin:.25rem 0 .25rem; font-size: clamp(1.6rem, 3vw, 2.2rem);}
 .btn:hover{transform: translateY(-1px);}
 .btn:active{transform: translateY(0px);}
 
-.meta{min-width: 280px; padding: 10px 12px; border-radius: 14px;
+.meta{min-width: 320px; padding: 10px 12px; border-radius: 14px;
   border:1px solid var(--stroke);
   background: rgba(255,255,255,0.06);
   box-shadow: var(--shadow);
@@ -211,10 +211,28 @@ h1{margin:.25rem 0 .25rem; font-size: clamp(1.6rem, 3vw, 2.2rem);}
   border:1px solid rgba(102,227,255,.28);
   background: rgba(102,227,255,.10);
   color: rgba(234,242,255,.95);
-  font-weight:700;
+  font-weight:800;
   font-size:.82rem;
 }
 .chip.secondary{border-color: rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: rgba(168,183,214,.95);}
+
+/* Flag emoji inside chips */
+.flag{margin-right: 6px; font-size: 1.05em; line-height: 1;}
+
+/* Medal mini-badge inside country chips */
+.medalBadge{
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(0,0,0,.18);
+  color: rgba(234,242,255,.92);
+  font-weight: 900;
+  font-size: .78rem;
+  letter-spacing: .02em;
+}
+.medalBadge.zero{opacity:.7}
+.medalBadge.unknown{opacity:.75}
 
 .foot{padding: 14px 18px 18px; display:flex; justify-content:space-between; gap: 12px; flex-wrap: wrap;}
 .note{color:var(--muted); font-size:.9rem;}
@@ -230,12 +248,4 @@ h1{margin:.25rem 0 .25rem; font-size: clamp(1.6rem, 3vw, 2.2rem);}
   .podium{grid-template-columns: 1fr;}
   .podiumCard.first{transform:none;}
   .rings svg{width: 150px;}
-}
-
-
-/* Flag emoji inside chips */
-.flag{
-  margin-right: 6px;
-  font-size: 1.05em;
-  line-height: 1;
 }
