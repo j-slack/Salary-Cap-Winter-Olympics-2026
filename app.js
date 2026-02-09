@@ -1,4 +1,4 @@
-// v10: Tooltip centering fix for desktop hover (especially podium 1)
+// v11: Edge hover fix: position tooltips using the pointer (clientX) on hover
 const EXCEL_FILE = 'OlympicTracker.xlsx';
 const SHEET_POINTS = 'Display Points';
 const SHEET_MEDALS = 'Medal Count';
@@ -81,11 +81,7 @@ function normalizeRow(row){
 function buildMedalMap(workbook){
   const map = new Map();
   const sheet = workbook.Sheets[SHEET_MEDALS];
-  if(!sheet){
-    setMedalSource('Missing Medal Count sheet');
-    setMedalsUpdatedNow();
-    return map;
-  }
+  if(!sheet){ setMedalSource('Missing Medal Count sheet'); setMedalsUpdatedNow(); return map; }
   const raw = XLSX.utils.sheet_to_json(sheet, { defval: '' });
   raw.forEach(r => {
     const country = canonicalMedalCountryName(r.Country ?? r.country ?? r['Country'] ?? r.NOC);
@@ -96,8 +92,7 @@ function buildMedalMap(workbook){
     const total = safeNumber(r['Total Medals'] ?? r.Total ?? r['Total']);
     map.set(country, {gold, silver, bronze, total});
   });
-  setMedalSource('Excel (Medal Count)');
-  setMedalsUpdatedNow();
+  setMedalSource('Excel (Medal Count)'); setMedalsUpdatedNow();
   return map;
 }
 
@@ -109,44 +104,32 @@ function chipsHTML(items, limit = Infinity, medalMap = null){
     const flagSpan = flag ? `<span class="flag" aria-hidden="true">${flag}</span>` : '';
     const m = medalMap?.get?.(canonicalMedalCountryName(c));
     const badge = (m && Number.isFinite(m.total)) ? `<span class="medalBadge">${m.total}</span>` : `<span class="medalBadge">—</span>`;
-
     const tooltip = m
-      ? `<div class="tooltip" role="tooltip">
-           <div><strong>${escapeHTML(c)}</strong></div>
-           <div class="row"><span>🥇</span><span class="nums">${m.gold}</span></div>
-           <div class="row"><span>🥈</span><span class="nums">${m.silver}</span></div>
-           <div class="row"><span>🥉</span><span class="nums">${m.bronze}</span></div>
-           <div class="row"><span>Total</span><span class="nums">${m.total}</span></div>
-         </div>`
-      : `<div class="tooltip" role="tooltip"><div><strong>${escapeHTML(c)}</strong></div><div class="row"><span>Medals</span><span class="nums">—</span></div></div>`;
-
+      ? `<div class="tooltip" role="tooltip"><div><strong>${escapeHTML(c)}</strong></div><div class="row"><span>🥇</span><span>${m.gold}</span></div><div class="row"><span>🥈</span><span>${m.silver}</span></div><div class="row"><span>🥉</span><span>${m.bronze}</span></div><div class="row"><span>Total</span><span>${m.total}</span></div></div>`
+      : `<div class="tooltip" role="tooltip"><div><strong>${escapeHTML(c)}</strong></div><div class="row"><span>Medals</span><span>—</span></div></div>`;
     return `<span class="chip" tabindex="0" aria-label="${escapeHTML(c)} medal details">${flagSpan}${escapeHTML(c)}${badge}${tooltip}</span>`;
   }).join('') + (items.length > limit ? `<span class="chip secondary">+${items.length - limit} more</span>` : '');
 }
 
-function positionTooltip(chip){
+function positionTooltip(chip, evt=null){
   const tip = chip.querySelector('.tooltip');
   if(!tip) return;
-
   const rect = chip.getBoundingClientRect();
 
-  // Force open briefly so it has measurable width/height
+  // Force open briefly for measurement
   const wasOpen = chip.classList.contains('open');
   chip.classList.add('open');
   const tipRect = tip.getBoundingClientRect();
   if(!wasOpen) chip.classList.remove('open');
 
   const margin = 10;
-  // ✅ Center tooltip over the chip (fix for podium 1 on desktop)
-  let x = rect.left + (rect.width/2) - (tipRect.width/2);
+  const anchorX = evt && typeof evt.clientX === 'number' ? evt.clientX : (rect.left + rect.width/2);
+  let x = anchorX - (tipRect.width/2);
   let y = rect.bottom + 8;
 
   const maxX = window.innerWidth - tipRect.width - margin;
   x = Math.max(margin, Math.min(x, maxX));
-
-  if(y + tipRect.height + margin > window.innerHeight){
-    y = rect.top - tipRect.height - 8;
-  }
+  if(y + tipRect.height + margin > window.innerHeight){ y = rect.top - tipRect.height - 8; }
   y = Math.max(margin, Math.min(y, window.innerHeight - tipRect.height - margin));
 
   tip.style.setProperty('--tip-x', `${Math.round(x)}px`);
@@ -155,6 +138,8 @@ function positionTooltip(chip){
 
 function wireChipTooltips(scope=document){
   const chips = scope.querySelectorAll('.chip:not(.secondary)');
+  const hoverFine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
   chips.forEach(chip => {
     if(chip.dataset.bound === '1') return;
     chip.dataset.bound = '1';
@@ -163,14 +148,23 @@ function wireChipTooltips(scope=document){
       e.stopPropagation();
       const isOpen = chip.classList.contains('open');
       document.querySelectorAll('.chip.open').forEach(c => c.classList.remove('open'));
-      if(!isOpen){
-        chip.classList.add('open');
-        positionTooltip(chip);
-      }
+      if(!isOpen){ chip.classList.add('open'); positionTooltip(chip, e); }
     };
 
     chip.addEventListener('click', toggle);
-    chip.addEventListener('mouseenter', () => positionTooltip(chip));
+
+    // Desktop hover: open + follow pointer (fixes Edge podium #1 drift)
+    chip.addEventListener('mouseenter', (e) => {
+      if(!hoverFine) return;
+      chip.classList.add('open');
+      positionTooltip(chip, e);
+    });
+    chip.addEventListener('mousemove', (e) => {
+      if(!hoverFine) return;
+      if(chip.classList.contains('open')) positionTooltip(chip, e);
+    });
+    chip.addEventListener('mouseleave', () => { if(hoverFine) chip.classList.remove('open'); });
+
     chip.addEventListener('keydown', (e) => {
       if(e.key === 'Enter' || e.key === ' ') toggle(e);
       if(e.key === 'Escape') chip.classList.remove('open');
@@ -189,15 +183,12 @@ function renderPodium(sorted, medalMap){
   const p1 = sorted[0] || {participant:'—', countries:[], points:'—'};
   const p2 = sorted[1] || {participant:'—', countries:[], points:'—'};
   const p3 = sorted[2] || {participant:'—', countries:[], points:'—'};
-
   document.getElementById('p1name').textContent = p1.participant || '—';
   document.getElementById('p1pts').textContent = p1.points ?? '—';
   document.getElementById('p1picks').innerHTML = chipsHTML(p1.countries, 6, medalMap);
-
   document.getElementById('p2name').textContent = p2.participant || '—';
   document.getElementById('p2pts').textContent = p2.points ?? '—';
   document.getElementById('p2picks').innerHTML = chipsHTML(p2.countries, 6, medalMap);
-
   document.getElementById('p3name').textContent = p3.participant || '—';
   document.getElementById('p3pts').textContent = p3.points ?? '—';
   document.getElementById('p3picks').innerHTML = chipsHTML(p3.countries, 6, medalMap);
@@ -233,7 +224,6 @@ async function loadExcelAndRender(){
     const url = `${EXCEL_FILE}?v=${Date.now()}`;
     const res = await fetch(url);
     if(!res.ok) throw new Error(`Could not fetch ${EXCEL_FILE} (${res.status})`);
-
     const buf = await res.arrayBuffer();
     const workbook = XLSX.read(buf, { type: 'array' });
 
