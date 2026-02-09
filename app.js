@@ -10,22 +10,11 @@ const refreshBtn = document.getElementById('refreshBtn');
 const medalsUpdatedAt = document.getElementById('medalsUpdatedAt');
 const medalSourceEl = document.getElementById('medalSource');
 
-function setUpdatedNow(){
-  updatedAt.textContent = new Date().toLocaleString();
-}
-function setMedalsUpdatedNow(){
-  if(medalsUpdatedAt) medalsUpdatedAt.textContent = new Date().toLocaleString();
-}
-function setMedalSource(label){
-  if(medalSourceEl) medalSourceEl.textContent = label;
-}
+function setUpdatedNow(){ updatedAt.textContent = new Date().toLocaleString(); }
+function setMedalsUpdatedNow(){ if(medalsUpdatedAt) medalsUpdatedAt.textContent = new Date().toLocaleString(); }
+function setMedalSource(label){ if(medalSourceEl) medalSourceEl.textContent = label; }
 
-function rankDotClass(rank){
-  if(rank === 1) return 'gold';
-  if(rank === 2) return 'silver';
-  if(rank === 3) return 'bronze';
-  return '';
-}
+function rankDotClass(rank){ return rank===1?'gold':rank===2?'silver':rank===3?'bronze':''; }
 
 function safeNumber(v){
   if(v == null) return 0;
@@ -43,7 +32,6 @@ function escapeHTML(str){
     .replaceAll("'", '&#39;');
 }
 
-// Friendly display names (matches your Display Points text)
 const COUNTRY_DISPLAY_MAP = {
   'USA': 'United States',
   'US': 'United States',
@@ -54,7 +42,6 @@ const COUNTRY_DISPLAY_MAP = {
   'UK': 'Great Britain',
   'AIN': 'Individual Neutral Athletes'
 };
-
 function normalizeCountryName(name){
   const raw = String(name ?? '').trim();
   if(!raw) return raw;
@@ -62,60 +49,21 @@ function normalizeCountryName(name){
   return hitKey ? COUNTRY_DISPLAY_MAP[hitKey] : raw;
 }
 
-// Emoji flag support
 const COUNTRY_FLAG_CODE = {
-  'United States': 'US',
-  'Canada': 'CA',
-  'Great Britain': 'GB',
-  'Germany': 'DE',
-  'France': 'FR',
-  'Italy': 'IT',
-  'Japan': 'JP',
-  'Netherlands': 'NL',
-  'Switzerland': 'CH',
-  'Austria': 'AT',
-  'Belgium': 'BE',
-  'Norway': 'NO',
-  'Sweden': 'SE',
-  'Finland': 'FI',
-  'Poland': 'PL',
-  'Slovakia': 'SK',
-  'Slovenia': 'SI',
-  'Estonia': 'EE',
-  'Latvia': 'LV',
-  'Lithuania': 'LT',
-  'Ukraine': 'UA',
-  'China': 'CN',
-  'Spain': 'ES',
-  'Hungary': 'HU',
-  'Romania': 'RO',
-  'Australia': 'AU',
-  'New Zealand': 'NZ',
-  'Jamaica': 'JM',
-  'Argentina': 'AR',
-  'South Korea': 'KR',
-  'Czech Republic': 'CZ'
+  'United States': 'US','Canada':'CA','Great Britain':'GB','Germany':'DE','France':'FR','Italy':'IT','Japan':'JP','Netherlands':'NL','Switzerland':'CH','Austria':'AT','Belgium':'BE','Norway':'NO','Sweden':'SE','Finland':'FI','Poland':'PL','Slovakia':'SK','Slovenia':'SI','Estonia':'EE','Latvia':'LV','Lithuania':'LT','Ukraine':'UA','China':'CN','Spain':'ES','Hungary':'HU','Romania':'RO','Australia':'AU','New Zealand':'NZ','Jamaica':'JM','Argentina':'AR','South Korea':'KR','Czech Republic':'CZ'
 };
-
 function isoToFlagEmoji(iso2){
   const code = String(iso2 ?? '').toUpperCase();
   if(!/^[A-Z]{2}$/.test(code)) return '';
   const A = 0x1F1E6;
   return String.fromCodePoint(code.codePointAt(0) - 65 + A, code.codePointAt(1) - 65 + A);
 }
-
 function flagForCountry(countryName){
   const iso = COUNTRY_FLAG_CODE[String(countryName ?? '').trim()];
   return iso ? isoToFlagEmoji(iso) : '';
 }
 
-// Name variants between sheets
-const COUNTRY_MEDAL_ALIASES = {
-  "People's Republic of China": 'China',
-  'Czechia': 'Czech Republic',
-  'Republic of Korea': 'South Korea'
-};
-
+const COUNTRY_MEDAL_ALIASES = {"People's Republic of China": 'China','Czechia':'Czech Republic','Republic of Korea':'South Korea'};
 function canonicalMedalCountryName(name){
   const n = normalizeCountryName(name);
   const hit = Object.keys(COUNTRY_MEDAL_ALIASES).find(k => k.toLowerCase() === String(n).toLowerCase());
@@ -123,19 +71,13 @@ function canonicalMedalCountryName(name){
 }
 
 function parseTeamsCell(text){
-  // Format: "Name (Country, Country, ...)".
   const s = (text ?? '').toString().trim();
   const open = s.indexOf('(');
   const close = s.lastIndexOf(')');
-
   if(open > 0 && close > open){
     const name = s.slice(0, open).trim();
     const inside = s.slice(open + 1, close);
-    const countries = inside
-      .split(',')
-      .map(x => normalizeCountryName(x.trim()))
-      .filter(Boolean)
-      .sort((a,b) => a.localeCompare(b));
+    const countries = inside.split(',').map(x => normalizeCountryName(x.trim())).filter(Boolean).sort((a,b) => a.localeCompare(b));
     return { name, countries, raw: s };
   }
   return { name: s, countries: [], raw: s };
@@ -156,7 +98,6 @@ function buildMedalMap(workbook){
     setMedalsUpdatedNow();
     return map;
   }
-
   const raw = XLSX.utils.sheet_to_json(sheet, { defval: '' });
   raw.forEach(r => {
     const country = canonicalMedalCountryName(r.Country ?? r.country ?? r['Country'] ?? r.NOC);
@@ -167,7 +108,6 @@ function buildMedalMap(workbook){
     const total = safeNumber(r['Total Medals'] ?? r.Total ?? r['Total']);
     map.set(country, {gold, silver, bronze, total});
   });
-
   setMedalSource('Excel (Medal Count)');
   setMedalsUpdatedNow();
   return map;
@@ -185,12 +125,48 @@ function chipsHTML(items, limit = Infinity, medalMap = null){
       ? `<span class="medalBadge ${m.total===0?'zero':''}">${m.total}</span>`
       : `<span class="medalBadge unknown">—</span>`;
 
-    const title = m ? `🥇${m.gold}  🥈${m.silver}  🥉${m.bronze}  • Total ${m.total}` : 'Medal count not available';
-    return `<span class="chip" title="${escapeHTML(title)}">${flagSpan}${escapeHTML(c)}${badge}</span>`;
+    const tooltip = m
+      ? `<div class="tooltip" role="tooltip">
+           <div><strong>${escapeHTML(c)}</strong></div>
+           <div class="row"><span>🥇</span><span class="nums">${m.gold}</span></div>
+           <div class="row"><span>🥈</span><span class="nums">${m.silver}</span></div>
+           <div class="row"><span>🥉</span><span class="nums">${m.bronze}</span></div>
+           <div class="row"><span>Total</span><span class="nums">${m.total}</span></div>
+         </div>`
+      : `<div class="tooltip" role="tooltip"><div><strong>${escapeHTML(c)}</strong></div><div class="row"><span>Medals</span><span class="nums">—</span></div></div>`;
+
+    return `<span class="chip" tabindex="0" aria-label="${escapeHTML(c)} medal details">${flagSpan}${escapeHTML(c)}${badge}${tooltip}</span>`;
   }).join('');
 
   const extra = items.length > limit ? `<span class="chip secondary">+${items.length - limit} more</span>` : '';
   return chips + extra;
+}
+
+function wireChipTooltips(scope=document){
+  const chips = scope.querySelectorAll('.chip:not(.secondary)');
+  chips.forEach(chip => {
+    if(chip.dataset.bound === '1') return;
+    chip.dataset.bound = '1';
+
+    const toggle = (e) => {
+      e.stopPropagation();
+      const isOpen = chip.classList.contains('open');
+      document.querySelectorAll('.chip.open').forEach(c => c.classList.remove('open'));
+      if(!isOpen) chip.classList.add('open');
+    };
+
+    chip.addEventListener('click', toggle);
+    chip.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' ') toggle(e);
+      if(e.key === 'Escape') chip.classList.remove('open');
+    });
+  });
+
+  if(!document.body.dataset.tooltipCloser){
+    document.body.dataset.tooltipCloser = '1';
+    document.addEventListener('click', () => document.querySelectorAll('.chip.open').forEach(c => c.classList.remove('open')));
+    document.addEventListener('scroll', () => document.querySelectorAll('.chip.open').forEach(c => c.classList.remove('open')), {passive:true});
+  }
 }
 
 function renderPodium(sorted, medalMap){
@@ -213,21 +189,15 @@ function renderPodium(sorted, medalMap){
 
 function renderTable(sorted, medalMap){
   leaderBody.innerHTML = '';
-
   sorted.forEach((row, idx) => {
     const rank = idx + 1;
     const tr = document.createElement('tr');
-
     const tdRank = document.createElement('td');
     tdRank.innerHTML = `<span class="rankBadge"><span class="rankDot ${rankDotClass(rank)}"></span>#${rank}</span>`;
 
     const tdTeam = document.createElement('td');
     if(row.countries?.length){
-      tdTeam.innerHTML = `
-        <div class="who">${escapeHTML(row.participant)}</div>
-        <div class="picksLabel">Selected countries (A→Z):</div>
-        <div class="chips">${chipsHTML(row.countries, Infinity, medalMap)}</div>
-      `;
+      tdTeam.innerHTML = `<div class="who">${escapeHTML(row.participant)}</div><div class="picksLabel">Selected countries (A→Z):</div><div class="chips">${chipsHTML(row.countries, Infinity, medalMap)}</div>`;
     } else {
       tdTeam.innerHTML = `<div class="who">${escapeHTML(row.teamsRaw)}</div>`;
     }
@@ -236,16 +206,13 @@ function renderTable(sorted, medalMap){
     tdPoints.className = 'points';
     tdPoints.textContent = row.points;
 
-    tr.appendChild(tdRank);
-    tr.appendChild(tdTeam);
-    tr.appendChild(tdPoints);
+    tr.appendChild(tdRank); tr.appendChild(tdTeam); tr.appendChild(tdPoints);
     leaderBody.appendChild(tr);
   });
 }
 
 async function loadExcelAndRender(){
   leaderBody.innerHTML = '<tr><td colspan="3" class="loading">Loading Excel…</td></tr>';
-
   try{
     const url = `${EXCEL_FILE}?v=${Date.now()}`;
     const res = await fetch(url);
@@ -255,18 +222,16 @@ async function loadExcelAndRender(){
     const workbook = XLSX.read(buf, { type: 'array' });
 
     const pointsSheet = workbook.Sheets[SHEET_POINTS];
-    if(!pointsSheet){
-      throw new Error(`Sheet "${SHEET_POINTS}" not found. Available: ${workbook.SheetNames.join(', ')}`);
-    }
+    if(!pointsSheet) throw new Error(`Sheet "${SHEET_POINTS}" not found. Available: ${workbook.SheetNames.join(', ')}`);
 
     const medalMap = buildMedalMap(workbook);
-
     const raw = XLSX.utils.sheet_to_json(pointsSheet, { defval: '' });
     const rows = raw.map(normalizeRow).filter(r => (r.participant || '').length);
     rows.sort((a,b) => b.points - a.points);
 
     renderPodium(rows, medalMap);
     renderTable(rows, medalMap);
+    wireChipTooltips(document);
     setUpdatedNow();
   } catch(err){
     console.error(err);
