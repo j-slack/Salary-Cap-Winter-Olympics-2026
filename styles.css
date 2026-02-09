@@ -7,7 +7,6 @@
   --text:#EAF2FF;
   --muted:#A8B7D6;
   --card: rgba(255,255,255,0.06);
-  --card2: rgba(255,255,255,0.10);
   --stroke: rgba(255,255,255,0.14);
   --gold:#F7D36B;
   --silver:#D6DEE7;
@@ -49,11 +48,8 @@ body{
   gap:18px;
 }
 
-.brand{
-  display:flex;
-  gap:14px;
-  align-items:flex-start;
-}
+.brand{display:flex; gap:14px; align-items:flex-start;}
+.brandText{min-width: 0;}
 
 .flake{
   width:44px;height:44px;
@@ -74,7 +70,17 @@ body{
 }
 
 h1{margin:.25rem 0 .25rem; font-size: clamp(1.6rem, 3vw, 2.2rem);}
-.sub{margin:0; color:var(--muted); max-width: 55ch;}
+.sub{margin:0; color:var(--muted); max-width: 60ch;}
+
+.rings{
+  margin-top: 10px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  opacity: .95;
+}
+.rings svg{width: 170px; height: auto; filter: drop-shadow(0 12px 24px rgba(0,0,0,.35));}
+.ringsLabel{color: rgba(168,183,214,.9); font-size:.78rem; letter-spacing:.08em; text-transform:uppercase;}
 
 .actions{display:flex; gap:14px; align-items:center;}
 .btn{
@@ -93,7 +99,7 @@ h1{margin:.25rem 0 .25rem; font-size: clamp(1.6rem, 3vw, 2.2rem);}
 
 .meta{min-width: 280px; padding: 10px 12px; border-radius: 14px;
   border:1px solid var(--stroke);
-  background: var(--card);
+  background: rgba(255,255,255,0.06);
   box-shadow: var(--shadow);
 }
 .metaLabel{color:var(--muted); font-size:.8rem;}
@@ -102,12 +108,7 @@ h1{margin:.25rem 0 .25rem; font-size: clamp(1.6rem, 3vw, 2.2rem);}
 
 .wrap{max-width:1100px; margin: 0 auto 28px; padding: 0 18px;}
 
-.podium{
-  display:grid;
-  grid-template-columns: 1fr 1.2fr 1fr;
-  gap:12px;
-  margin: 14px 0 18px;
-}
+.podium{display:grid; grid-template-columns: 1fr 1.2fr 1fr; gap:12px; margin: 14px 0 18px;}
 
 .podiumCard{
   border: 1px solid var(--stroke);
@@ -140,12 +141,13 @@ h1{margin:.25rem 0 .25rem; font-size: clamp(1.6rem, 3vw, 2.2rem);}
 .medal.silver{background: linear-gradient(180deg, rgba(214,222,231,.92), rgba(214,222,231,.35)); color:#0f1320;}
 .medal.bronze{background: linear-gradient(180deg, rgba(217,160,123,.92), rgba(217,160,123,.35)); color:#1a0f09;}
 
-.podiumName{font-size:1.05rem; font-weight:800; margin-bottom:4px;}
-.podiumPoints{color: var(--muted); font-weight:700;}
+.podiumName{font-size:1.05rem; font-weight:800; margin-bottom:6px;}
+.podiumPoints{color: var(--muted); font-weight:800; margin-top:10px;}
+.podiumPicks{display:flex; flex-wrap:wrap; gap:6px; margin-top:2px;}
 
 .card{
   border:1px solid var(--stroke);
-  background: var(--card);
+  background: rgba(255,255,255,0.06);
   border-radius: 20px;
   box-shadow: var(--shadow);
   overflow:hidden;
@@ -163,7 +165,7 @@ h1{margin:.25rem 0 .25rem; font-size: clamp(1.6rem, 3vw, 2.2rem);}
 .hint{color:var(--muted); font-size:.9rem;}
 
 .tableWrap{overflow:auto;}
-.table{width:100%; border-collapse: collapse; min-width: 720px;}
+.table{width:100%; border-collapse: collapse; min-width: 760px;}
 .table thead th{
   position: sticky;
   top:0;
@@ -186,43 +188,37 @@ h1{margin:.25rem 0 .25rem; font-size: clamp(1.6rem, 3vw, 2.2rem);}
 
 .col-rank{width:90px;}
 .col-points{width:120px; text-align:right;}
-.table td.points{font-weight:800; text-align:right;}
-
+.table td.points{font-weight:900; text-align:right;}
 .table tr:hover td{background: rgba(255,255,255,.04);}
 
-.rankBadge{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  font-weight:800;
-}
-
-.rankDot{
-  width:10px;height:10px; border-radius: 999px;
-  background: rgba(102,227,255,.8);
-  box-shadow: 0 0 0 4px rgba(102,227,255,.16);
-}
-.rankDot.gold{background: rgba(247,211,107,.95); box-shadow:0 0 0 4px rgba(247,211,107,.18);}
-.rankDot.silver{background: rgba(214,222,231,.95); box-shadow:0 0 0 4px rgba(214,222,231,.18);}
-.rankDot.bronze{background: rgba(217,160,123,.95); box-shadow:0 0 0 4px rgba(217,160,123,.18);}
+.rankBadge{display:inline-flex; align-items:center; gap:8px; font-weight:800;}
+.rankDot{width:10px;height:10px; border-radius: 999px; background: rgba(102,227,255,.8); box-shadow: 0 0 0 4px rgba(102,227,255,.16);} 
+.rankDot.gold{background: rgba(247,211,107,.95); box-shadow:0 0 0 4px rgba(247,211,107,.18);} 
+.rankDot.silver{background: rgba(214,222,231,.95); box-shadow:0 0 0 4px rgba(214,222,231,.18);} 
+.rankDot.bronze{background: rgba(217,160,123,.95); box-shadow:0 0 0 4px rgba(217,160,123,.18);} 
 
 .loading{color:var(--muted); text-align:center; padding: 18px;}
 
-.foot{
-  padding: 14px 18px 18px;
-  display:flex;
-  justify-content:space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.note{color:var(--muted); font-size:.9rem;}
-.badge{
-  border:1px solid rgba(102,227,255,.30);
-  background: rgba(102,227,255,.10);
-  padding: 8px 10px;
+/* Participant & picks formatting */
+.who{font-weight:900; font-size:1rem;}
+.picksLabel{color: rgba(168,183,214,.95); font-size:.82rem; margin-top:4px;}
+.chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+.chip{
+  display:inline-flex;
+  align-items:center;
+  padding: 6px 10px;
   border-radius: 999px;
+  border:1px solid rgba(102,227,255,.28);
+  background: rgba(102,227,255,.10);
+  color: rgba(234,242,255,.95);
   font-weight:700;
+  font-size:.82rem;
 }
+.chip.secondary{border-color: rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: rgba(168,183,214,.95);}
+
+.foot{padding: 14px 18px 18px; display:flex; justify-content:space-between; gap: 12px; flex-wrap: wrap;}
+.note{color:var(--muted); font-size:.9rem;}
+.badge{border:1px solid rgba(102,227,255,.30); background: rgba(102,227,255,.10); padding: 8px 10px; border-radius: 999px; font-weight:800;}
 
 .footer{max-width:1100px; margin: 0 auto 28px; padding: 0 18px;}
 .fine{color: rgba(168,183,214,.8); font-size: .82rem;}
@@ -233,4 +229,13 @@ h1{margin:.25rem 0 .25rem; font-size: clamp(1.6rem, 3vw, 2.2rem);}
   .meta{min-width: 0; flex: 1;}
   .podium{grid-template-columns: 1fr;}
   .podiumCard.first{transform:none;}
+  .rings svg{width: 150px;}
+}
+
+
+/* Flag emoji inside chips */
+.flag{
+  margin-right: 6px;
+  font-size: 1.05em;
+  line-height: 1;
 }
