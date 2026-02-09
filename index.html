@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
-  <!-- SheetJS (XLSX parser) -->
   <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script defer src="app.js"></script>
 </head>
@@ -23,7 +22,6 @@
         <h1>Medal Picks Leaderboard</h1>
         <p class="sub">Points from each participant’s 6-country medal predictions.</p>
 
-        <!-- Ring-inspired motif (unofficial) -->
         <div class="rings" aria-hidden="true" title="Ring-inspired motif (unofficial)">
           <svg viewBox="0 0 240 90" role="img" focusable="false">
             <defs>
@@ -65,7 +63,7 @@
         <div class="metaLabel">Source</div>
         <div class="metaValue"><code>OlympicTracker.xlsx</code> → sheet <code>Display Points</code></div>
         <div class="metaSmall">Leaderboard refreshed: <span id="updatedAt">—</span></div>
-        <div class="metaSmall">Medals: <span id="medalSource">—</span> • refreshed <span id="medalsUpdatedAt">—</span></div>
+        <div class="metaSmall">Medals: <span id="medalSource">Excel (Medal Count)</span> • refreshed <span id="medalsUpdatedAt">—</span></div>
       </div>
     </div>
   </header>
@@ -96,7 +94,7 @@
     <section class="card" aria-label="Leaderboard">
       <div class="cardHeader">
         <h2>Leaderboard</h2>
-        <div class="hint">Auto-sorted high → low by <strong>Points (column B)</strong>. Countries are alphabetized per participant and show live medal totals.</div>
+        <div class="hint">Auto-sorted high → low by <strong>Points</strong>. Countries are alphabetized per participant and show medal totals from <strong>Medal Count</strong> sheet.</div>
       </div>
 
       <div class="tableWrap" role="region" aria-label="Scrollable Leaderboard Table" tabindex="0">
@@ -115,7 +113,7 @@
       </div>
 
       <div class="foot">
-        <div class="note">Tip: if you host this on GitHub Pages, updating <code>OlympicTracker.xlsx</code> in the repo updates this page.</div>
+        <div class="note">Update the Excel workbook in the repo to refresh medal totals and points.</div>
         <div class="badge">⛷️ Winter 2026 scoreboard vibe</div>
       </div>
     </section>
