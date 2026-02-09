@@ -192,6 +192,7 @@ function renderTable(sorted, medalMap){
   sorted.forEach((row, idx) => {
     const rank = idx + 1;
     const tr = document.createElement('tr');
+
     const tdRank = document.createElement('td');
     tdRank.innerHTML = `<span class="rankBadge"><span class="rankDot ${rankDotClass(rank)}"></span>#${rank}</span>`;
 
