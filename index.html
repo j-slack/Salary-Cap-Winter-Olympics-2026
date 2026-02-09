@@ -54,9 +54,7 @@
   </header>
 
   <main class="wrap">
-
     <section class="podium" aria-label="Top 3">
-      <!-- DOM order is now 1st, 2nd, 3rd for clarity on mobile -->
       <div class="podiumCard first" id="podium1">
         <div class="placeLabel">1st Place</div>
         <div class="medal gold" aria-hidden="true">1</div>
@@ -64,7 +62,6 @@
         <div class="podiumPicks" id="p1picks"></div>
         <div class="podiumPoints"><span id="p1pts">—</span> pts</div>
       </div>
-
       <div class="podiumCard" id="podium2">
         <div class="placeLabel">2nd Place</div>
         <div class="medal silver" aria-hidden="true">2</div>
@@ -72,7 +69,6 @@
         <div class="podiumPicks" id="p2picks"></div>
         <div class="podiumPoints"><span id="p2pts">—</span> pts</div>
       </div>
-
       <div class="podiumCard" id="podium3">
         <div class="placeLabel">3rd Place</div>
         <div class="medal bronze" aria-hidden="true">3</div>
@@ -85,9 +81,8 @@
     <section class="card" aria-label="Leaderboard">
       <div class="cardHeader">
         <h2>Leaderboard</h2>
-        <div class="hint">Auto-sorted high → low by <strong>Points</strong>. Countries are alphabetized and show medal totals from <strong>Medal Count</strong>.</div>
+        <div class="hint">Auto-sorted high → low by <strong>Points</strong>. Tap a country to see medal breakdown.</div>
       </div>
-
       <div class="tableWrap" role="region" aria-label="Scrollable Leaderboard Table" tabindex="0">
         <table class="table" id="leaderTable">
           <thead>
@@ -102,13 +97,11 @@
           </tbody>
         </table>
       </div>
-
       <div class="foot">
         <div class="note">Update the Excel workbook in the repo to refresh medal totals and points.</div>
         <div class="badge">⛷️ Winter 2026 scoreboard vibe</div>
       </div>
     </section>
-
   </main>
 
   <footer class="footer">

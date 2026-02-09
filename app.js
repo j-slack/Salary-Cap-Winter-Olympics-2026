@@ -1,5 +1,3 @@
-// Loads OlympicTracker.xlsx, reads sheets "Display Points" and "Medal Count", then renders a Winter 2026-themed leaderboard.
-
 const EXCEL_FILE = 'OlympicTracker.xlsx';
 const SHEET_POINTS = 'Display Points';
 const SHEET_MEDALS = 'Medal Count';
@@ -13,8 +11,6 @@ const medalSourceEl = document.getElementById('medalSource');
 function setUpdatedNow(){ updatedAt.textContent = new Date().toLocaleString(); }
 function setMedalsUpdatedNow(){ if(medalsUpdatedAt) medalsUpdatedAt.textContent = new Date().toLocaleString(); }
 function setMedalSource(label){ if(medalSourceEl) medalSourceEl.textContent = label; }
-
-function rankDotClass(rank){ return rank===1?'gold':rank===2?'silver':rank===3?'bronze':''; }
 
 function safeNumber(v){
   if(v == null) return 0;
@@ -32,16 +28,9 @@ function escapeHTML(str){
     .replaceAll("'", '&#39;');
 }
 
-const COUNTRY_DISPLAY_MAP = {
-  'USA': 'United States',
-  'US': 'United States',
-  'U.S.': 'United States',
-  'U.S.A.': 'United States',
-  'Swiss': 'Switzerland',
-  'Czech': 'Czech Republic',
-  'UK': 'Great Britain',
-  'AIN': 'Individual Neutral Athletes'
-};
+function rankDotClass(rank){ return rank===1?'gold':rank===2?'silver':rank===3?'bronze':''; }
+
+const COUNTRY_DISPLAY_MAP = { 'USA':'United States','US':'United States','U.S.':'United States','U.S.A.':'United States','Swiss':'Switzerland','Czech':'Czech Republic','UK':'Great Britain','AIN':'Individual Neutral Athletes' };
 function normalizeCountryName(name){
   const raw = String(name ?? '').trim();
   if(!raw) return raw;
@@ -50,7 +39,7 @@ function normalizeCountryName(name){
 }
 
 const COUNTRY_FLAG_CODE = {
-  'United States': 'US','Canada':'CA','Great Britain':'GB','Germany':'DE','France':'FR','Italy':'IT','Japan':'JP','Netherlands':'NL','Switzerland':'CH','Austria':'AT','Belgium':'BE','Norway':'NO','Sweden':'SE','Finland':'FI','Poland':'PL','Slovakia':'SK','Slovenia':'SI','Estonia':'EE','Latvia':'LV','Lithuania':'LT','Ukraine':'UA','China':'CN','Spain':'ES','Hungary':'HU','Romania':'RO','Australia':'AU','New Zealand':'NZ','Jamaica':'JM','Argentina':'AR','South Korea':'KR','Czech Republic':'CZ'
+  'United States':'US','Canada':'CA','Great Britain':'GB','Germany':'DE','France':'FR','Italy':'IT','Japan':'JP','Netherlands':'NL','Switzerland':'CH','Austria':'AT','Belgium':'BE','Norway':'NO','Sweden':'SE','Finland':'FI','Poland':'PL','Slovakia':'SK','Slovenia':'SI','Estonia':'EE','Latvia':'LV','Lithuania':'LT','Ukraine':'UA','China':'CN','Spain':'ES','Hungary':'HU','Romania':'RO','Australia':'AU','New Zealand':'NZ','Jamaica':'JM','Argentina':'AR','South Korea':'KR','Czech Republic':'CZ'
 };
 function isoToFlagEmoji(iso2){
   const code = String(iso2 ?? '').toUpperCase();
@@ -63,7 +52,7 @@ function flagForCountry(countryName){
   return iso ? isoToFlagEmoji(iso) : '';
 }
 
-const COUNTRY_MEDAL_ALIASES = {"People's Republic of China": 'China','Czechia':'Czech Republic','Republic of Korea':'South Korea'};
+const COUNTRY_MEDAL_ALIASES = {"People's Republic of China":'China','Czechia':'Czech Republic','Republic of Korea':'South Korea'};
 function canonicalMedalCountryName(name){
   const n = normalizeCountryName(name);
   const hit = Object.keys(COUNTRY_MEDAL_ALIASES).find(k => k.toLowerCase() === String(n).toLowerCase());
@@ -116,14 +105,13 @@ function buildMedalMap(workbook){
 function chipsHTML(items, limit = Infinity, medalMap = null){
   if(!items || !items.length) return '<span class="chip secondary">No picks listed</span>';
   const shown = items.slice(0, limit);
-  const chips = shown.map(c => {
+  return shown.map(c => {
     const flag = flagForCountry(c);
     const flagSpan = flag ? `<span class="flag" aria-hidden="true">${flag}</span>` : '';
-
     const m = medalMap?.get?.(canonicalMedalCountryName(c));
     const badge = (m && Number.isFinite(m.total))
-      ? `<span class="medalBadge ${m.total===0?'zero':''}">${m.total}</span>`
-      : `<span class="medalBadge unknown">—</span>`;
+      ? `<span class="medalBadge">${m.total}</span>`
+      : `<span class="medalBadge">—</span>`;
 
     const tooltip = m
       ? `<div class="tooltip" role="tooltip">
@@ -136,10 +124,34 @@ function chipsHTML(items, limit = Infinity, medalMap = null){
       : `<div class="tooltip" role="tooltip"><div><strong>${escapeHTML(c)}</strong></div><div class="row"><span>Medals</span><span class="nums">—</span></div></div>`;
 
     return `<span class="chip" tabindex="0" aria-label="${escapeHTML(c)} medal details">${flagSpan}${escapeHTML(c)}${badge}${tooltip}</span>`;
-  }).join('');
+  }).join('') + (items.length > limit ? `<span class="chip secondary">+${items.length - limit} more</span>` : '');
+}
 
-  const extra = items.length > limit ? `<span class="chip secondary">+${items.length - limit} more</span>` : '';
-  return chips + extra;
+function positionTooltip(chip){
+  const tip = chip.querySelector('.tooltip');
+  if(!tip) return;
+
+  // Ensure tooltip has a size by forcing open briefly
+  const wasOpen = chip.classList.contains('open');
+  chip.classList.add('open');
+  const tipRect = tip.getBoundingClientRect();
+  if(!wasOpen) chip.classList.remove('open');
+
+  const rect = chip.getBoundingClientRect();
+  const margin = 10;
+  let x = rect.left;
+  let y = rect.bottom + 8;
+
+  const maxX = window.innerWidth - tipRect.width - margin;
+  x = Math.max(margin, Math.min(x, maxX));
+
+  if(y + tipRect.height + margin > window.innerHeight){
+    y = rect.top - tipRect.height - 8;
+  }
+  y = Math.max(margin, Math.min(y, window.innerHeight - tipRect.height - margin));
+
+  tip.style.setProperty('--tip-x', `${Math.round(x)}px`);
+  tip.style.setProperty('--tip-y', `${Math.round(y)}px`);
 }
 
 function wireChipTooltips(scope=document){
@@ -152,10 +164,14 @@ function wireChipTooltips(scope=document){
       e.stopPropagation();
       const isOpen = chip.classList.contains('open');
       document.querySelectorAll('.chip.open').forEach(c => c.classList.remove('open'));
-      if(!isOpen) chip.classList.add('open');
+      if(!isOpen){
+        chip.classList.add('open');
+        positionTooltip(chip);
+      }
     };
 
     chip.addEventListener('click', toggle);
+    chip.addEventListener('mouseenter', () => positionTooltip(chip));
     chip.addEventListener('keydown', (e) => {
       if(e.key === 'Enter' || e.key === ' ') toggle(e);
       if(e.key === 'Escape') chip.classList.remove('open');
@@ -166,6 +182,7 @@ function wireChipTooltips(scope=document){
     document.body.dataset.tooltipCloser = '1';
     document.addEventListener('click', () => document.querySelectorAll('.chip.open').forEach(c => c.classList.remove('open')));
     document.addEventListener('scroll', () => document.querySelectorAll('.chip.open').forEach(c => c.classList.remove('open')), {passive:true});
+    window.addEventListener('resize', () => document.querySelectorAll('.chip.open').forEach(c => positionTooltip(c)));
   }
 }
 
@@ -194,7 +211,7 @@ function renderTable(sorted, medalMap){
     const tr = document.createElement('tr');
 
     const tdRank = document.createElement('td');
-    tdRank.innerHTML = `<span class="rankBadge"><span class="rankDot ${rankDotClass(rank)}"></span>#${rank}</span>`;
+    tdRank.innerHTML = `<span class="rankBadge">#${rank}</span>`;
 
     const tdTeam = document.createElement('td');
     if(row.countries?.length){
